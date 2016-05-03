@@ -11,6 +11,7 @@ classdef CameraMatrix % < hgsetget
 	end
 	
 	properties (Dependent)
+    nDims
 		x0
 		y0
 		f
@@ -91,14 +92,15 @@ classdef CameraMatrix % < hgsetget
 			end
 			
 			Vi = obj.P*Vw;
-			Xi = Vi(1,:)./Vi(3,:);
-			Yi = Vi(2,:)./Vi(3,:);
+      for i = 1:obj.nDims-1
+        X{i} = Vi(i,:)./Vi(obj.nDims,:);
+      end
 			
 			if nargout<2
-				varargout{1} = [Xi;Yi]';
-			elseif nargout==2
-				varargout{1} = Xi';
-				varargout{2} = Yi';
+				varargout{1} = cat(1,X{:})';
+% 			elseif nargout==2
+% 				varargout{1} = Xi';
+% 				varargout{2} = Yi';
 			end
 		end
 		
@@ -124,7 +126,7 @@ classdef CameraMatrix % < hgsetget
 		
 		%% P
 		function val = get.P(obj)
-			val = obj.K*obj.R*[eye(3),-obj.c];
+			val = obj.K*obj.R*[eye(obj.nDims),-obj.c];
     end
 		
     %% c
@@ -135,7 +137,11 @@ classdef CameraMatrix % < hgsetget
 		%% t
 		function val = get.t(obj)
 			val = -obj.R*obj.c;
-		end
+    end
+    
+    function obj = set.t(obj,val)
+      obj.c = -obj.R'*val;
+    end
 		
 		%% f
 		function val = get.f(obj)
@@ -163,6 +169,11 @@ classdef CameraMatrix % < hgsetget
 		
 		function obj = set.y0(obj,val)
 			obj.K(2,3) = val;
+		end
+		
+		%% nDims
+		function val = get.nDims(obj)
+			val = size(obj.K,1);
 		end
 		
 	end
